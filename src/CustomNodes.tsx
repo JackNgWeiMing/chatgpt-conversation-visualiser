@@ -58,7 +58,9 @@ export function GeneralNode({ data }) {
     Boolean(content || content_text)
       ? {
           label: "Content",
-          value: <Textarea minRows={5}>{content || content_text}</Textarea>,
+          value: (
+            <Textarea minRows={5} value={content || content_text}></Textarea>
+          ),
         }
       : null,
     attactments && attactments.length
