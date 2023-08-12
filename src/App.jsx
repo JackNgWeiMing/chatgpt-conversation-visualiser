@@ -6,6 +6,7 @@ import ReactFlow, {
   useReactFlow,
   BackgroundVariant,
   Background,
+  MarkerType,
 } from "reactflow";
 import code_interpreter from "./datasource/code_interpreter.json";
 import dagre from "dagre";
@@ -13,38 +14,31 @@ import dagre from "dagre";
 import "reactflow/dist/style.css";
 import { GeneralNode } from "./CustomNodes";
 
-const startNode = code_interpreter.mapping[code_interpreter.current_node];
 let initialNodes = [];
 let initialEdges = [];
 
-let previous_node = null;
 let current_count = 1;
-let current_node = startNode;
 
 // eslint-disable-next-line no-constant-condition
-while (true) {
+const nodes = Object.values(code_interpreter.mapping);
+for (const current_node of nodes) {
   initialNodes.push({
     type: "general",
-    id: current_count.toString(),
+    id: current_node.id,
     position: { x: 50, y: (current_count - 1) * 450 },
     data: current_node,
   });
 
-  if (previous_node) {
+  if (current_node.parent) {
     initialEdges.push({
-      id: "e" + current_count,
-      source: (current_count - 1).toString(),
-      target: current_count.toString(),
+      id: "e-" + current_node.id + "-" + current_node.parent,
+      source: current_node.parent,
+      target: current_node.id,
+      markerEnd: {
+        type: MarkerType.Arrow,
+      },
     });
   }
-
-  if (!current_node.parent) {
-    break;
-  }
-
-  previous_node = current_node;
-  current_node = code_interpreter.mapping[current_node.parent];
-  current_count++;
 }
 
 const dagreGraph = new dagre.graphlib.Graph();

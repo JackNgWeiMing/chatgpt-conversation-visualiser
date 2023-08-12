@@ -21,6 +21,7 @@
     "dagre": "^0.8.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-json-view-lite": "^0.9.8",
     "reactflow": "^11.8.1"
   },
   "devDependencies": {
