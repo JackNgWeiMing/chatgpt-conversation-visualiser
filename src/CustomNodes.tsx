@@ -43,6 +43,8 @@ export function GeneralNode({ data }) {
 
   const [opened, { close, open }] = useDisclosure(false);
 
+  const isUser = role === "user";
+
   const fields = [
     {
       label: "Role",
@@ -52,17 +54,20 @@ export function GeneralNode({ data }) {
       label: "Content Type",
       value: content_type,
     },
-    {
-      label: "Content",
-      value: <Textarea minRows={5}>{content || content_text}</Textarea>,
-    },
+
+    Boolean(content || content_text)
+      ? {
+          label: "Content",
+          value: <Textarea minRows={5}>{content || content_text}</Textarea>,
+        }
+      : null,
     attactments && attactments.length
       ? {
           label: "Attactments",
           value: attactments && attactments.length ? true : false,
         }
       : null,
-    user_context_message
+    Boolean(user_context_message)
       ? {
           label: "User Context Message",
           value: <Textarea minRows={3}>{user_context_message}</Textarea>,
@@ -77,7 +82,13 @@ export function GeneralNode({ data }) {
           return {
             display: "flex",
             flexDirection: "column",
-            backgroundColor: them.white,
+            backgroundColor:
+              {
+                user: them.colors.green[0],
+                system: them.colors.blue[0],
+                assistant: them.colors.blue[0],
+                tool: them.colors.yellow[0],
+              }[role] ?? "#fff",
             width: 400,
             height: 400,
             border: "1px solid #f2eeee",
@@ -163,6 +174,8 @@ export function GeneralNode({ data }) {
             })}
           </Stack>
           <Button
+            variant="outline"
+            m={4}
             draggable={false}
             onDragStart={(event) => {
               event.stopPropagation();
