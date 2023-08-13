@@ -41,6 +41,7 @@ export function GeneralNode({ data }) {
   const content = data?.message?.content?.parts?.[0];
   const content_text = data?.message?.content?.text;
   const attactments = data?.message?.metadata?.attachments;
+  const endTurn = data?.message?.end_turn;
   const user_context_message =
     data?.message?.metadata?.user_context_message_data?.about_model_message;
 
@@ -77,6 +78,13 @@ export function GeneralNode({ data }) {
           label: "User Context Message",
           rawValue: user_context_message,
           value: <Textarea minRows={3}>{user_context_message}</Textarea>,
+        }
+      : null,
+    typeof endTurn === "boolean"
+      ? {
+          label: "End Turn",
+          rawValue: endTurn,
+          value: <Checkbox checked={endTurn} />,
         }
       : null,
   ].filter(Boolean);
