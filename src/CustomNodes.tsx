@@ -30,7 +30,6 @@ import React, { useCallback } from "react";
 
 import { Handle, Position } from "reactflow";
 import { modals } from "@mantine/modals";
-import { useDisclosure } from "@mantine/hooks";
 import { JsonView } from "react-json-view-lite";
 import "react-json-view-lite/dist/index.css";
 

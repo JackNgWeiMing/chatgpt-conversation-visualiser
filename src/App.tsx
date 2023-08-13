@@ -195,7 +195,7 @@ export default function App() {
         zoomOnScroll={false}
         panOnScroll={true}
       >
-        <Background color="#000" variant={BackgroundVariant.Dots} />
+        <Background color="#fff" variant={BackgroundVariant.Dots} />
         <Panel position="bottom-right">
           <Box
             onMouseEnter={() => {
