@@ -1,7 +1,7 @@
 {
-  "name": "my-react-flow-app",
-  "private": true,
-  "version": "0.0.0",
+  "name": "chatgpt-conversation-visualizer",
+  "private": false,
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
