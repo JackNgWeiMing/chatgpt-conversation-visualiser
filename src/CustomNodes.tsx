@@ -248,7 +248,7 @@ export function GeneralNode({ data }) {
               });
             }}
           >
-            View all
+            View Raw
           </Button>
         </Stack>
         <Handle type="source" position={Position.Right} id="a" />

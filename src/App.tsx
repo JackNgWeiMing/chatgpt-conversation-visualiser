@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import ReactFlow, {
   useNodesState,
   useEdgesState,
@@ -15,18 +15,22 @@ import dagre from "dagre";
 import "reactflow/dist/style.css";
 import { GeneralNode } from "./CustomNodes";
 import {
-  Textarea,
   Box,
   Stack,
   Text,
   Collapse,
   Title,
   Group,
+  ScrollArea,
+  ActionIcon,
+  Textarea,
   Button,
 } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
 import { notifications } from "@mantine/notifications";
 import { useDisclosure, useHover } from "@mantine/hooks";
+import { JsonView } from "react-json-view-lite";
+import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 
 const prepareData = (input: any) => {
   let initialNodes: Object[] = [];
@@ -121,6 +125,7 @@ const defaultRawData = code_interpreter;
 const defaultData = prepareData(defaultRawData);
 
 export default function App() {
+  const [jsonEdit, setJsonEdit] = useState(false);
   const { hovered, hoverRef } = useHover();
   const [panelOpened, panelHelper] = useDisclosure(false);
 
@@ -128,6 +133,10 @@ export default function App() {
   const [preparedData, setPreparedData] = useState(defaultRawData);
   const [nodes, setNodes, onNodesChange] = useNodesState(defaultData.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(defaultData.edges);
+  const refs = {
+    panel: useRef<HTMLDivElement>(null),
+    jsonTextarea: useRef<HTMLTextAreaElement>(null),
+  };
 
   const onConnect = useCallback(
     (params) => setEdges((eds) => addEdge(params, eds)),
@@ -139,6 +148,27 @@ export default function App() {
       general: GeneralNode,
     };
   }, []);
+
+  const setNewJson = (content: any) => {
+    return new Promise((resolve, reject) => {
+      let parsedJSON = null as null | Object;
+      try {
+        parsedJSON = JSON.parse(content) as Object;
+      } catch (error) {
+        console.error("Error parsing JSON:", error);
+        reject("Invalid JSON");
+      }
+
+      const preparedData = prepareData(parsedJSON);
+      // @ts-ignore
+      setRawData(parsedJSON);
+      setNodes(preparedData.nodes);
+      setEdges(preparedData.edges);
+      setPreparedData(preparedData.nodes);
+
+      resolve(prepareData);
+    });
+  };
 
   const handleDrop = (files) => {
     // alert("File dropped");
@@ -160,20 +190,7 @@ export default function App() {
           console.error("No content found in file");
           return;
         }
-
-        try {
-          const parsedJSON = JSON.parse(content);
-          console.log("File content is a valid JSON:", parsedJSON);
-
-          const preparedData = prepareData(parsedJSON);
-          // @ts-ignore
-          setRawData(parsedJSON);
-          setNodes(preparedData.nodes);
-          setEdges(preparedData.edges);
-          setPreparedData(preparedData.nodes);
-        } catch (error) {
-          console.error("Error parsing JSON:", error);
-        }
+        setNewJson(content);
       };
       reader.readAsText(file);
     } else {
@@ -198,39 +215,93 @@ export default function App() {
         <Background color="#fff" variant={BackgroundVariant.Dots} />
         <Panel position="bottom-right">
           <Box
+            tabIndex={0}
+            ref={refs.panel}
             onMouseEnter={() => {
-              panelHelper.open();
+              if (!refs.panel.current?.contains(document.activeElement)) {
+                panelHelper.open();
+              }
             }}
             onMouseLeave={() => {
-              panelHelper.close();
+              if (!refs.panel.current?.contains(document.activeElement)) {
+                panelHelper.close();
+              }
             }}
             p={16}
             bg="white"
-            w="500px"
+            w="800px"
             sx={(theme) => {
-              return {
-                border: `1px solid ${theme.colors.gray[3]}`,
-              };
+              return { border: `1px solid ${theme.colors.gray[3]}` };
             }}
           >
-            <Group position="apart">
-              <Title size={"sm"}>Preview </Title>
-              <Button
-                size="xs"
-                variant="light"
-                color="blue"
-                onClick={panelHelper.toggle}
+            <Group position="apart" mb={4}>
+              <Title size={"sm"}>Setting</Title>
+              <ActionIcon
+                onClick={() => {
+                  panelHelper.close();
+                  setTimeout(() => {
+                    (document.activeElement as HTMLElement)?.blur();
+                  }, 1000);
+                }}
               >
-                Show
-              </Button>
+                {panelOpened ? <IconChevronDown /> : <IconChevronUp />}
+              </ActionIcon>
             </Group>
             <Collapse in={panelOpened || hovered}>
-              <Stack>
-                <Textarea
-                  minRows={5}
-                  label="JSON string"
-                  value={JSON.stringify(rawData, null, 2)}
-                ></Textarea>
+              <Stack h="80vh">
+                <ScrollArea style={{ flexGrow: 1, position: "relative" }}>
+                  {jsonEdit ? (
+                    <>
+                      <Textarea
+                        ref={refs.jsonTextarea}
+                        autosize
+                        style={{ maxHeight: "100%" }}
+                        defaultValue={JSON.stringify(rawData, null, 2)}
+                      ></Textarea>
+                    </>
+                  ) : (
+                    <Box>
+                      <Button
+                        onClick={() => {
+                          setJsonEdit(true);
+                        }}
+                        style={{ position: "absolute", right: 10, bottom: 10 }}
+                      >
+                        Edit
+                      </Button>
+                      <JsonView data={rawData} />
+                    </Box>
+                  )}
+                </ScrollArea>
+                {jsonEdit ? (
+                  <Group>
+                    <Button
+                      variant="outline"
+                      style={{ flexGrow: 1 }}
+                      onClick={() => {
+                        setJsonEdit(false);
+                      }}
+                    >
+                      Close
+                    </Button>
+                    <Button
+                      style={{ flexGrow: 1 }}
+                      onClick={() => {
+                        const content = refs.jsonTextarea.current?.value;
+                        console.log("what is thsi", content);
+
+                        setNewJson(content).then(() => {
+                          notifications.show({
+                            message: "Updated",
+                          });
+                        });
+                      }}
+                    >
+                      Submit
+                    </Button>
+                  </Group>
+                ) : null}
+
                 <Dropzone onDrop={handleDrop} accept={["application/json"]}>
                   <Stack style={{ gap: 4 }}>
                     <Text size="lg" inline>
