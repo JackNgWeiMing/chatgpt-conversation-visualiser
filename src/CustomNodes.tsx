@@ -45,6 +45,8 @@ export function GeneralNode({ data }) {
   const user_context_message =
     data?.message?.metadata?.user_context_message_data?.about_model_message;
 
+  const plugin = data?.message?.metadata?.invoked_plugin?.namespace;
+
   const isStartNode = !role && !content_text;
 
   if (isStartNode) {
@@ -72,6 +74,13 @@ export function GeneralNode({ data }) {
       rawValue: role,
       value: role,
     },
+    Boolean(plugin)
+      ? {
+          label: "Plugin",
+          rawValue: plugin,
+          value: plugin,
+        }
+      : null,
     {
       label: "Content Type",
       rawValue: content_type,
