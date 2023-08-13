@@ -3,6 +3,7 @@ import {
   Badge,
   Box,
   Button,
+  Center,
   Checkbox,
   Code,
   Divider,
@@ -43,6 +44,27 @@ export function GeneralNode({ data }) {
   const endTurn = data?.message?.end_turn;
   const user_context_message =
     data?.message?.metadata?.user_context_message_data?.about_model_message;
+
+  const isStartNode = !role && !content_text;
+
+  if (isStartNode) {
+    return (
+      <Box
+        bg="white"
+        p={20}
+        sx={(theme) => {
+          return {
+            borderRadius: theme.radius.md,
+          };
+        }}
+      >
+        <Handle type="source" position={Position.Right} id="a" />
+        <Center>
+          <Title size="xs">Start Node</Title>
+        </Center>
+      </Box>
+    );
+  }
 
   const fields = [
     {
