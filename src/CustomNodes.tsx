@@ -1,5 +1,6 @@
 import {
   ActionIcon,
+  Badge,
   Box,
   Button,
   Checkbox,
@@ -11,10 +12,11 @@ import {
   Text,
   TextInput,
   Textarea,
+  ThemeIcon,
   Title,
   rem,
 } from "@mantine/core";
-import { IconEye } from "@tabler/icons-react";
+import { IconEye, IconGitBranch } from "@tabler/icons-react";
 import React, { useCallback } from "react";
 /**
  * possible role: system , assistance , tool
@@ -33,6 +35,7 @@ import { JsonView } from "react-json-view-lite";
 import "react-json-view-lite/dist/index.css";
 
 export function GeneralNode({ data }) {
+  const is_main = data?._is_main;
   const role = data?.message?.author?.role;
   const content_type = data?.message?.content?.content_type;
   const content = data?.message?.content?.parts?.[0];
@@ -41,23 +44,22 @@ export function GeneralNode({ data }) {
   const user_context_message =
     data?.message?.metadata?.user_context_message_data?.about_model_message;
 
-  const [opened, { close, open }] = useDisclosure(false);
-
-  const isUser = role === "user";
-
   const fields = [
     {
       label: "Role",
+      rawValue: role,
       value: role,
     },
     {
       label: "Content Type",
+      rawValue: content_type,
       value: content_type,
     },
 
     Boolean(content || content_text)
       ? {
           label: "Content",
+          rawValue: content || content_text,
           value: (
             <Textarea minRows={5} value={content || content_text}></Textarea>
           ),
@@ -66,12 +68,14 @@ export function GeneralNode({ data }) {
     attactments && attactments.length
       ? {
           label: "Attactments",
+          rawValue: attactments,
           value: attactments && attactments.length ? true : false,
         }
       : null,
     Boolean(user_context_message)
       ? {
           label: "User Context Message",
+          rawValue: user_context_message,
           value: <Textarea minRows={3}>{user_context_message}</Textarea>,
         }
       : null,
@@ -94,7 +98,6 @@ export function GeneralNode({ data }) {
             width: 400,
             height: 400,
             border: "1px solid #f2eeee",
-            boxShadow: them.shadows.md,
             borderRadius: them.radius.md,
           };
         }}
@@ -102,7 +105,23 @@ export function GeneralNode({ data }) {
         <Handle type="target" position={Position.Left} />
         <Group position="apart" px={16} py={8}>
           <Title size={"xs"} transform="capitalize">
-            {role}
+            {is_main ? (
+              <Badge
+                leftSection={
+                  <ActionIcon size="xs" radius="xl">
+                    <IconGitBranch size={rem(10)} color="#fff" />
+                  </ActionIcon>
+                }
+                color="indigo"
+                variant="filled"
+                mr="md"
+              >
+                Main
+              </Badge>
+            ) : (
+              ""
+            )}
+            {role}{" "}
           </Title>
           <Title size={"xs"}>{content_type}</Title>
         </Group>
@@ -113,9 +132,49 @@ export function GeneralNode({ data }) {
             {fields.map((field) => {
               return (
                 <Group style={{ flexWrap: "nowrap" }}>
-                  <Text size={"xs"} w={100}>
-                    {field.label}
-                  </Text>
+                  <Group>
+                    <Text size={"xs"} w={80}>
+                      {field.label}
+                    </Text>
+                    {field.value ? (
+                      <div
+                        onClick={() => {
+                          modals.openConfirmModal({
+                            size: "lg",
+                            title: "View Message",
+                            children: (
+                              <Box>
+                                <Code
+                                  block
+                                  w="100%"
+                                  style={{ whiteSpace: "pre-wrap" }}
+                                >
+                                  {typeof field.rawValue === "string"
+                                    ? field.rawValue
+                                    : JSON.stringify(field.rawValue, null, 2)}
+                                </Code>
+                              </Box>
+                            ),
+                            labels: {
+                              confirm: "Confirm",
+                              cancel: "Cancel",
+                            },
+                            onCancel: () => console.log("Cancel"),
+                            onConfirm: () => console.log("Confirmed"),
+                          });
+                        }}
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <IconEye size={rem(20)} />
+                      </div>
+                    ) : null}
+                  </Group>
+
                   <Box
                     style={{
                       flexGrow: 1,
@@ -126,44 +185,6 @@ export function GeneralNode({ data }) {
                         size="xs"
                         style={{ textTransform: "capitalize" }}
                         value={field.value}
-                        rightSection={
-                          field.value ? (
-                            <div
-                              onClick={() => {
-                                // modals.openModal({});
-                                modals.openConfirmModal({
-                                  size: "lg",
-                                  title: "View Message",
-                                  children: (
-                                    <Box>
-                                      <Code
-                                        block
-                                        w="100%"
-                                        style={{ whiteSpace: "pre-wrap" }}
-                                      >
-                                        {field.value}
-                                      </Code>
-                                    </Box>
-                                  ),
-                                  labels: {
-                                    confirm: "Confirm",
-                                    cancel: "Cancel",
-                                  },
-                                  onCancel: () => console.log("Cancel"),
-                                  onConfirm: () => console.log("Confirmed"),
-                                });
-                              }}
-                              style={{
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                cursor: "pointer",
-                              }}
-                            >
-                              <IconEye size={rem(20)} color="#ccc" />
-                            </div>
-                          ) : null
-                        }
                       />
                     ) : typeof field.value === "boolean" ? (
                       <Checkbox checked={field.value} />

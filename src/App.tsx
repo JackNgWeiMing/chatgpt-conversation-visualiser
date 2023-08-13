@@ -14,14 +14,36 @@ import dagre from "dagre";
 
 import "reactflow/dist/style.css";
 import { GeneralNode } from "./CustomNodes";
-import { Textarea, Box, Stack, Text } from "@mantine/core";
+import {
+  Textarea,
+  Box,
+  Stack,
+  Text,
+  Collapse,
+  Title,
+  Group,
+  Button,
+} from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
 import { notifications } from "@mantine/notifications";
+import { useDisclosure, useHover } from "@mantine/hooks";
 
 const prepareData = (input: any) => {
   let initialNodes: Object[] = [];
   let initialEdges: Object[] = [];
   // const mappings = input.mapping;
+
+  let mainNodes: string[] = [];
+  let lastNode = input.mapping[input.current_node];
+  while (lastNode) {
+    mainNodes.push(lastNode.id);
+    lastNode._is_main = true;
+    if (lastNode.parent) {
+      lastNode = input.mapping[lastNode.parent];
+    } else {
+      lastNode = null;
+    }
+  }
 
   const nodes = Object.entries(input.mapping) as any[];
   for (const [current_count, current_node] of nodes) {
@@ -89,14 +111,21 @@ const prepareData = (input: any) => {
 
   const layouted = getLayoutedElements(initialNodes, initialEdges, "LR");
 
-  return layouted;
+  return {
+    ...layouted,
+    mainNodes,
+  };
 };
 
 const defaultRawData = code_interpreter;
 const defaultData = prepareData(defaultRawData);
 
 export default function App() {
+  const { hovered, hoverRef } = useHover();
+  const [panelOpened, panelHelper] = useDisclosure(false);
+
   const [rawData, setRawData] = useState(defaultRawData);
+  const [preparedData, setPreparedData] = useState(defaultRawData);
   const [nodes, setNodes, onNodesChange] = useNodesState(defaultData.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(defaultData.edges);
 
@@ -135,13 +164,13 @@ export default function App() {
         try {
           const parsedJSON = JSON.parse(content);
           console.log("File content is a valid JSON:", parsedJSON);
-          debugger;
 
-          const { nodes, edges } = prepareData(parsedJSON);
+          const preparedData = prepareData(parsedJSON);
           // @ts-ignore
           setRawData(parsedJSON);
-          setNodes(nodes);
-          setEdges(edges);
+          setNodes(preparedData.nodes);
+          setEdges(preparedData.edges);
+          setPreparedData(preparedData.nodes);
         } catch (error) {
           console.error("Error parsing JSON:", error);
         }
@@ -156,6 +185,7 @@ export default function App() {
     <div style={{ width: "100vw", height: "100vh" }}>
       <div id="modal_target"></div>
       <ReactFlow
+        style={{ backgroundColor: "#888" }}
         nodeTypes={nodeTypes}
         nodes={nodes}
         edges={edges}
@@ -167,25 +197,53 @@ export default function App() {
       >
         <Background color="#000" variant={BackgroundVariant.Dots} />
         <Panel position="bottom-right">
-          <Box p={16} bg="white">
-            <Stack>
-              <Textarea
-                minRows={5}
-                label="JSON string"
-                value={JSON.stringify(rawData, null, 2)}
-              ></Textarea>
-              <Dropzone onDrop={handleDrop} accept={["application/json"]}>
-                <Stack style={{ gap: 4 }}>
-                  <Text size="lg" inline>
-                    Drag a json file
-                  </Text>
-                  <Text size="lg" color="dimmed" inline mt={7}>
-                    Attach as many files as you like, each file should not
-                    exceed 5mb
-                  </Text>
-                </Stack>
-              </Dropzone>
-            </Stack>
+          <Box
+            onMouseEnter={() => {
+              panelHelper.open();
+            }}
+            onMouseLeave={() => {
+              panelHelper.close();
+            }}
+            p={16}
+            bg="white"
+            w="500px"
+            sx={(theme) => {
+              return {
+                border: `1px solid ${theme.colors.gray[3]}`,
+              };
+            }}
+          >
+            <Group position="apart">
+              <Title size={"sm"}>Preview </Title>
+              <Button
+                size="xs"
+                variant="light"
+                color="blue"
+                onClick={panelHelper.toggle}
+              >
+                Show
+              </Button>
+            </Group>
+            <Collapse in={panelOpened || hovered}>
+              <Stack>
+                <Textarea
+                  minRows={5}
+                  label="JSON string"
+                  value={JSON.stringify(rawData, null, 2)}
+                ></Textarea>
+                <Dropzone onDrop={handleDrop} accept={["application/json"]}>
+                  <Stack style={{ gap: 4 }}>
+                    <Text size="lg" inline>
+                      Drag a json file
+                    </Text>
+                    <Text size="lg" color="dimmed" inline mt={7}>
+                      Attach as many files as you like, each file should not
+                      exceed 5mb
+                    </Text>
+                  </Stack>
+                </Dropzone>
+              </Stack>
+            </Collapse>
           </Box>
         </Panel>
       </ReactFlow>
