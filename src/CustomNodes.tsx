@@ -8,6 +8,7 @@ import {
   Code,
   Divider,
   Group,
+  Highlight,
   Modal,
   Stack,
   Text,
@@ -37,6 +38,7 @@ import "react-json-view-lite/dist/index.css";
 export function GeneralNode({ data }) {
   const is_main = data?._is_main;
   const role = data?.message?.author?.role;
+  const message_id = data?.message?.id
   const content_type = data?.message?.content?.content_type;
   const content = data?.message?.content?.parts?.[0];
   const content_text = data?.message?.content?.text;
@@ -76,10 +78,10 @@ export function GeneralNode({ data }) {
     },
     Boolean(plugin)
       ? {
-          label: "Plugin",
-          rawValue: plugin,
-          value: plugin,
-        }
+        label: "Plugin",
+        rawValue: plugin,
+        value: plugin,
+      }
       : null,
     {
       label: "Content Type",
@@ -89,33 +91,33 @@ export function GeneralNode({ data }) {
 
     Boolean(content || content_text)
       ? {
-          label: "Content",
-          rawValue: content || content_text,
-          value: (
-            <Textarea minRows={5} value={content || content_text}></Textarea>
-          ),
-        }
+        label: "Content",
+        rawValue: content || content_text,
+        value: (
+          <Textarea minRows={5} value={content || content_text}></Textarea>
+        ),
+      }
       : null,
     attactments && attactments.length
       ? {
-          label: "Attactments",
-          rawValue: attactments,
-          value: attactments && attactments.length ? true : false,
-        }
+        label: "Attactments",
+        rawValue: attactments,
+        value: attactments && attactments.length ? true : false,
+      }
       : null,
     Boolean(user_context_message)
       ? {
-          label: "User Context Message",
-          rawValue: user_context_message,
-          value: <Textarea minRows={3}>{user_context_message}</Textarea>,
-        }
+        label: "User Context Message",
+        rawValue: user_context_message,
+        value: <Textarea minRows={3}>{user_context_message}</Textarea>,
+      }
       : null,
     typeof endTurn === "boolean"
       ? {
-          label: "End Turn",
-          rawValue: endTurn,
-          value: <Checkbox checked={endTurn} />,
-        }
+        label: "End Turn",
+        rawValue: endTurn,
+        value: <Checkbox checked={endTurn} />,
+      }
       : null,
   ].filter(Boolean);
 
@@ -141,6 +143,7 @@ export function GeneralNode({ data }) {
         }}
       >
         <Handle type="target" position={Position.Left} />
+
         <Group position="apart" px={16} py={8}>
           <Title size={"xs"} transform="capitalize">
             {is_main ? (
@@ -163,6 +166,11 @@ export function GeneralNode({ data }) {
           </Title>
           <Title size={"xs"}>{content_type}</Title>
         </Group>
+        <Text px="lg" weight={"bold"} >
+          <Highlight highlight={message_id}>
+            {message_id}
+          </Highlight>
+        </Text>
 
         <Divider></Divider>
         <Stack justify="space-between" style={{ flexGrow: 1 }}>

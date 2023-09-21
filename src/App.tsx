@@ -31,6 +31,7 @@ import { notifications } from "@mantine/notifications";
 import { useDisclosure, useHover } from "@mantine/hooks";
 import { JsonView } from "react-json-view-lite";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
+import { Analytics } from "@vercel/analytics/react";
 
 const prepareData = (input: any) => {
   let initialNodes: Object[] = [];
